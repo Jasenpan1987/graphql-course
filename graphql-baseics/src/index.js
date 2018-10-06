@@ -5,8 +5,10 @@ import {
 // Type definitions (schema)
 const typeDefs = `
   type Query {
+    greeting(name: String, initial: String): String!
     me: User!
     post: Post!
+    add(a: Float!, b: Float!): Float!
   }
 
   type User {
@@ -26,6 +28,15 @@ const typeDefs = `
 // Resolvers
 const resolvers = {
   Query: {
+    add(parent, {
+      a,
+      b
+    }) {
+      return a + b
+    },
+    greeting(parent, args) {
+      return `Hello ${!args.name? "user": args.initial ? args.initial+ " " + args.name : args.name}`
+    },
     me() {
       return {
         id: "abc123",

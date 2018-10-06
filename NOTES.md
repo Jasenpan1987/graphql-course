@@ -86,3 +86,9 @@ It will give you back an array of users with selected fields.
 
 ### 1.1.3 5 Scalar types
 String, Boolean, Int, Float, ID
+
+### 1.1.4 Optional arguments that can passed into queries
+- parent
+- args
+- ctx
+- info
