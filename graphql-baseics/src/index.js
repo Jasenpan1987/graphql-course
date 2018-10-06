@@ -9,6 +9,8 @@ const typeDefs = `
     me: User!
     post: Post!
     add(a: Float!, b: Float!): Float!
+    grades: [Int!]!
+    sum(numbers: [Float!]!): Float!
   }
 
   type User {
@@ -52,6 +54,12 @@ const resolvers = {
         body: undefined,
         published: true
       }
+    },
+    grades(parent, args) {
+      return [12, 99, 31, 82, 100]
+    },
+    sum(parent, args) {
+      return args.numbers.reduce((total, num) => total + num, 0)
     }
   }
 }
