@@ -83,3 +83,6 @@ response:
 }
 ```
 It will give you back an array of users with selected fields.
+
+### 1.1.3 5 Scalar types
+String, Boolean, Int, Float, ID

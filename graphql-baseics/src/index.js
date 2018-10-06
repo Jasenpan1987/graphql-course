@@ -5,27 +5,21 @@ import {
 // Type definitions (schema)
 const typeDefs = `
   type Query {
-    hello: String!
-    name: String
-    age: Int
-    location: String
+    title: String!
+    price: Float!
+    releasedYear: Int
+    rating: Float
+    inStock: Boolean
   }
 `
 // Resolvers
 const resolvers = {
   Query: {
-    hello() {
-      return "My first query..."
-    },
-    name() {
-      return "Foo bar"
-    },
-    age() {
-      return 100
-    },
-    location() {
-      return "Somewhere"
-    }
+    title: () => "Awesome book",
+    price: () => 39.99,
+    releasedYear: () => 2009,
+    rating: () => 4.8,
+    inStock: () => false
   }
 }
 
