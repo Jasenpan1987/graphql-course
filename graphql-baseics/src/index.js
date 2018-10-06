@@ -5,21 +5,43 @@ import {
 // Type definitions (schema)
 const typeDefs = `
   type Query {
+    me: User!
+    post: Post!
+  }
+
+  type User {
+    id: ID!
+    name: String!
+    email: String!
+    age: Int
+  }
+
+  type Post {
+    id: ID!
     title: String!
-    price: Float!
-    releasedYear: Int
-    rating: Float
-    inStock: Boolean
+    body: String
+    published: Boolean!
   }
 `
 // Resolvers
 const resolvers = {
   Query: {
-    title: () => "Awesome book",
-    price: () => 39.99,
-    releasedYear: () => 2009,
-    rating: () => 4.8,
-    inStock: () => false
+    me() {
+      return {
+        id: "abc123",
+        name: "Foo bar",
+        email: "foo@bar.com",
+        age: null
+      }
+    },
+    post() {
+      return {
+        id: "post_1",
+        title: "My awesome post",
+        body: undefined,
+        published: true
+      }
+    }
   }
 }
 
