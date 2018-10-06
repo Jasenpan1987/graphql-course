@@ -2,15 +2,58 @@ import {
   GraphQLServer
 } from "graphql-yoga"
 
+// sample data
+const sampleUsers = [{
+    id: "abc123",
+    name: "Foo bar",
+    email: "foo@bar.com",
+    age: null
+  },
+  {
+    id: "def456",
+    name: "Baz Boo",
+    email: "baz@boo.com",
+    age: 10
+  },
+  {
+    id: "ghi789",
+    name: "John Doe",
+    email: "john@doe.com",
+    age: 80
+  }
+]
+
+const samplePosts = [{
+    id: "1",
+    title: "Hello World",
+    body: "What a beautiful day!",
+    published: true
+  },
+  {
+    id: "2",
+    title: "I'm learning graphql",
+    body: "It's fun and powerful",
+    published: true
+  },
+  {
+    id: "3",
+    title: "My Next mission",
+    body: "Learn how to use graphql with node and react",
+    published: false
+  },
+]
+
+function includeIn(str, sub) {
+  return str.toLowerCase().includes(sub.toLowerCase());
+}
+
 // Type definitions (schema)
 const typeDefs = `
   type Query {
-    greeting(name: String, initial: String): String!
     me: User!
+    users(query: String): [User!]!
     post: Post!
-    add(a: Float!, b: Float!): Float!
-    grades: [Int!]!
-    sum(numbers: [Float!]!): Float!
+    posts(query: String): [Post!]!
   }
 
   type User {
@@ -30,15 +73,6 @@ const typeDefs = `
 // Resolvers
 const resolvers = {
   Query: {
-    add(parent, {
-      a,
-      b
-    }) {
-      return a + b
-    },
-    greeting(parent, args) {
-      return `Hello ${!args.name? "user": args.initial ? args.initial+ " " + args.name : args.name}`
-    },
     me() {
       return {
         id: "abc123",
@@ -55,11 +89,24 @@ const resolvers = {
         published: true
       }
     },
-    grades(parent, args) {
-      return [12, 99, 31, 82, 100]
+    users(parent, args) {
+      if (!args.query) {
+        return sampleUsers
+      }
+
+      return sampleUsers.filter(user => includeIn(user.name, args.query))
     },
-    sum(parent, args) {
-      return args.numbers.reduce((total, num) => total + num, 0)
+    posts(parent, args) {
+      const {
+        query
+      } = args;
+      if (!query) {
+        return samplePosts;
+      }
+      return samplePosts.filter(({
+        title,
+        body
+      }) => [title, body].some(txt => includeIn(txt, query)))
     }
   }
 }
