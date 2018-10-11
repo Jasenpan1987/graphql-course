@@ -92,3 +92,57 @@ String, Boolean, Int, Float, ID
 - args
 - ctx
 - info
+
+## 1.2 Mutation
+### 1.2.1 Mutation defination
+just like the `type Query`, we need to define the `type Mutation` first before any implementations.
+
+```
+  type Mutation {
+    createUser(name: String!, email: String!, age: Int): User!
+  }
+```
+
+To execute a mutation, you can do the similar thing as we did for query
+```
+mutation {
+  createUser(name:"Jasen", email:"jasen@pan.com", age: 99999) {
+    id
+    name
+    email
+  }
+}
+```
+
+To implement the mutation, it's also similar the queries we created earlier, all the parameters passed into the mutation is also can be access from `args`, and we can implement the logic as well as the return value.
+```js
+const resolvers = {
+  ...,
+  Query: { ... },
+  Mutation: {
+    createUser(parent, args, ctx, info) {
+      const {
+        name,
+        email,
+        age
+      } = args;
+
+      const emailTaken = sampleUsers.some(user => user.email === email);
+
+      if (emailTaken) {
+        throw new Error("Email has been taken");
+      }
+
+      const newUser = {
+        id: uuidv4(),
+        name,
+        email,
+        age
+      }
+      sampleUsers.unshift(newUser);
+
+      return newUser;
+    }
+  }
+}
+```
