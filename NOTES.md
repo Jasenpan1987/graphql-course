@@ -1,15 +1,20 @@
 # 1. Graphql Operations
+
 ## 1.1. Graphql query
+
 https://www.udemy.com/graphql-bootcamp/learn/v4/t/lecture/11838198?start=0
 
 ### 1.1.1 Basic query
+
 ```
 query {
   # query body here
   hello
 }
 ```
+
 Response:
+
 ```
 {
   "data": {
@@ -17,14 +22,18 @@ Response:
   }
 }
 ```
+
 And you can add two field in a single query
+
 ```
 query {
   hello
   courseInstructor
 }
 ```
+
 If you try to query some field which is not exists, it you give you an error
+
 ```
 {
   "error": "Response not successful: Received status code 400"
@@ -32,7 +41,9 @@ If you try to query some field which is not exists, it you give you an error
 ```
 
 ### 1.1.2 Nested queries
+
 Objects has types in graphql, like objects in javascript which has fields. And querying object need to passing the requested fields.
+
 ```
 query {
   me{
@@ -41,7 +52,9 @@ query {
   }
 }
 ```
+
 response:
+
 ```
 {
   "data": {
@@ -52,7 +65,9 @@ response:
   }
 }
 ```
+
 If we querying a list (array) of objects, we just do like we querying object
+
 ```
 query {
   users {
@@ -61,7 +76,9 @@ query {
   }
 }
 ```
+
 response:
+
 ```
 {
   "data": {
@@ -82,19 +99,24 @@ response:
   }
 }
 ```
+
 It will give you back an array of users with selected fields.
 
 ### 1.1.3 5 Scalar types
+
 String, Boolean, Int, Float, ID
 
 ### 1.1.4 Optional arguments that can passed into queries
+
 - parent
 - args
 - ctx
 - info
 
 ## 1.2 Mutation
+
 ### 1.2.1 Mutation defination
+
 just like the `type Query`, we need to define the `type Mutation` first before any implementations.
 
 ```
@@ -104,6 +126,7 @@ just like the `type Query`, we need to define the `type Mutation` first before a
 ```
 
 To execute a mutation, you can do the similar thing as we did for query
+
 ```
 mutation {
   createUser(name:"Jasen", email:"jasen@pan.com", age: 99999) {
@@ -115,6 +138,7 @@ mutation {
 ```
 
 To implement the mutation, it's also similar the queries we created earlier, all the parameters passed into the mutation is also can be access from `args`, and we can implement the logic as well as the return value.
+
 ```js
 const resolvers = {
   ...,
@@ -143,6 +167,71 @@ const resolvers = {
 
       return newUser;
     }
+  }
+}
+```
+
+### 1.2.2 Input type
+
+In the past, when we create an user, the arguments for the mutation looks messy,
+
+```
+createUser(name:"Jasen", email:"jasen@pan.com", age: 99999)
+```
+
+Instead, we can have all the arguments in one argument, just like the arguments in javascript functions can be wrapped into one object argument. To do this we need to
+
+1. define an input type in the type definations
+
+```
+  input CreatePostInput {
+    title: String!
+    body: String!
+    published: Boolean!
+    author: ID
+  }
+```
+
+2. Also update our mutation definations
+
+```
+  type Mutation {
+    createUser(inputUser: CreateUserInput!): User!
+    ...
+  }
+```
+
+Be careful, if you don't want the inputUser to be an optional argument, you need to add the `"!"` at the ned of the argument too.
+
+3. modify our resolver function's argument
+
+```js
+Mutation: {
+    createUser(parent, args, ctx, info) {
+      const {
+        inputUser: { name, email, age }
+      } = args;
+      ...
+  },
+  ...
+}
+```
+
+Now when we run the mutation, we need to update the arguments as well
+
+```
+mutation {
+  createUser(
+    inputUser: {
+      name: "John",
+      email:"aaa@aaa.com",
+      age: 18
+    }
+  ) {
+    id
+    name
+    email
+    age
   }
 }
 ```

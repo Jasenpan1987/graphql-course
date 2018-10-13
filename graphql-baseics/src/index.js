@@ -93,9 +93,28 @@ const typeDefs = `
   }
 
   type Mutation {
-    createUser(name: String!, email: String!, age: Int): User!
-    createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
-    createComment(text: String!, author: ID!, post: ID!): Comment!
+    createUser(inputUser: CreateUserInput!): User!
+    createPost(inputPost: CreatePostInput!): Post!
+    createComment(inputComment: CreateCommentInput!): Comment!
+  }
+
+  input CreateUserInput {
+    name: String!
+    email: String!
+    age: Int
+  }
+
+  input CreatePostInput {
+    title: String!
+    body: String!
+    published: Boolean!
+    author: ID
+  }
+
+  input CreateCommentInput {
+    text: String!
+    author: ID!
+    post: ID!
   }
 
   type User {
@@ -179,7 +198,9 @@ const resolvers = {
 
   Mutation: {
     createUser(parent, args, ctx, info) {
-      const { name, email, age } = args;
+      const {
+        inputUser: { name, email, age }
+      } = args;
 
       const emailTaken = sampleUsers.some(user => user.email === email);
 
@@ -199,7 +220,9 @@ const resolvers = {
     },
 
     createPost(parent, args, ctx, info) {
-      const { author, title, body, published } = args;
+      const {
+        inputPost: { author, title, body, published }
+      } = args;
 
       const userExist = sampleUsers.some(user => user.id === author);
       if (!userExist) {
@@ -220,7 +243,9 @@ const resolvers = {
     },
 
     createComment(parent, args, ctx, info) {
-      const { text, author, post } = args;
+      const {
+        inputComment: { text, author, post }
+      } = args;
       const authorFound = sampleUsers.some(user => user.id === author);
       const postFound = samplePosts.find(p => p.id === post);
       if (!postFound) {
