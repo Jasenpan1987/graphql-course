@@ -235,3 +235,5 @@ mutation {
   }
 }
 ```
+
+Another benefit we have after using this typed input is the input type can be reused later on, for example, if we have a mutation called `createAdminUser` which takes the exact same arguments as we have in the `createUser`, we can just say `createAdminUser(inputUser: CreateUserInput)` rather than have a list of arguments individually.

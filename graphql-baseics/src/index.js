@@ -2,7 +2,7 @@ import { GraphQLServer } from "graphql-yoga";
 import uuidv4 from "uuid/v4";
 
 // sample data
-const sampleUsers = [
+let sampleUsers = [
   {
     id: "abc123",
     name: "Foo bar",
@@ -23,7 +23,7 @@ const sampleUsers = [
   }
 ];
 
-const samplePosts = [
+let samplePosts = [
   {
     id: "1",
     title: "Hello World",
@@ -47,7 +47,7 @@ const samplePosts = [
   }
 ];
 
-const sampleComments = [
+let sampleComments = [
   {
     id: "1",
     text: "This is awesome",
@@ -94,8 +94,11 @@ const typeDefs = `
 
   type Mutation {
     createUser(inputUser: CreateUserInput!): User!
+    deleteUser(userId: ID!): User!
     createPost(inputPost: CreatePostInput!): Post!
+    deletePost(postId: ID!): Post!
     createComment(inputComment: CreateCommentInput!): Comment!
+    deleteComment(commentId: ID!): Comment!
   }
 
   input CreateUserInput {
@@ -219,6 +222,34 @@ const resolvers = {
       return newUser;
     },
 
+    deleteUser(parent, args, ctx, info) {
+      const { userId } = args;
+      const userIdx = sampleUsers.findIndex(user => user.id === userId);
+
+      if (userIdx === -1) {
+        throw new Error("User not found");
+      }
+
+      const deletedUsers = sampleUsers.splice(userIdx, 1);
+
+      // delete all the posts and comments for the deleted user
+      samplePosts = samplePosts.filter(post => {
+        const match = post.author === userId;
+
+        if (match) {
+          // delete all the comments for the post
+          sampleComments.filter(comment => comment.post !== post.id);
+        }
+        return !match;
+      });
+
+      sampleComments = sampleComments.filter(
+        comment => comment.author !== userId
+      );
+
+      return deletedUsers[0];
+    },
+
     createPost(parent, args, ctx, info) {
       const {
         inputPost: { author, title, body, published }
@@ -240,6 +271,23 @@ const resolvers = {
       samplePosts.unshift(newPost);
 
       return newPost;
+    },
+
+    deletePost(parent, args, ctx, info) {
+      const { postId } = args;
+      const postIdx = samplePosts.findIndex(post => post.id === postId);
+
+      if (postIdx === -1) {
+        throw new Error("Post not found");
+      }
+
+      const deletedPosts = samplePosts.splice(postIdx, 1);
+
+      // delete all the comments for the post
+      sampleComments = sampleComments.filter(
+        comment => comment.post !== postId
+      );
+      return deletedPosts[0];
     },
 
     createComment(parent, args, ctx, info) {
@@ -270,6 +318,22 @@ const resolvers = {
       sampleComments.push(newComment);
 
       return newComment;
+    },
+
+    deleteComment(parent, args, ctx, info) {
+      const { commentId } = args;
+
+      const commentIdx = sampleComments.findIndex(
+        comment => comment.id === commentId
+      );
+
+      if (commentIdx === -1) {
+        throw new Error("Comment not exist");
+      }
+
+      const deletedComment = sampleComments.splice(commentIdx, 1)[0];
+
+      return deletedComment;
     }
   }
 };
