@@ -237,3 +237,42 @@ mutation {
 ```
 
 Another benefit we have after using this typed input is the input type can be reused later on, for example, if we have a mutation called `createAdminUser` which takes the exact same arguments as we have in the `createUser`, we can just say `createAdminUser(inputUser: CreateUserInput)` rather than have a list of arguments individually.
+
+### 1.2.3 graphql file extension
+
+When we break down the files into multiple file and directries, we can take advantage of the `graphql` file extension. All the type definitions can be saved into one or multiple `schema.graphql` files and from now on, we don't have to use the template string anymore, and for most of the ides and editors, there are plugins for the graphql files, which can give text highlight and red error lines.
+
+When we use it in the server bootstraping step, we can give the path of the `schema.graphql` file we just created
+
+```js
+const server = new GraphQLServer({
+  typeDefs: "./src/schema.graphql",
+  resolvers: {
+    User,
+    Post,
+    Comment,
+    Query,
+    Mutation
+  },
+  context: { db }
+});
+```
+
+Be aware here, the path is the relative path of the root, not the relative path for the current file that uses it.
+
+In addtion, notice we have the `context` here, this is like the dependency injection which injects the required data and / or functions into the resolver. Here, the db is the dummy data we created earlier which has also been moved to somewhere else.
+
+In the resolver, we can access from the third argument, `context` it's much more simpler and more decoupled code, because later on, if we throw away the dummy data and move to the actual data base, we don't have to go inside every part of the resolver that has a reference to the `db`.
+
+```js
+const Query = {
+  users(parent, args, context) {
+    if (!args.query) {
+      return context.db.users;
+    }
+
+    return context.db.users.filter(user => includeIn(user.name, args.query));
+  },
+  ...
+}
+```
