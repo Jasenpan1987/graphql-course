@@ -49,6 +49,34 @@ export const Mutation = {
     return deletedUsers[0];
   },
 
+  updateUser(parent, args, { db }, info) {
+    const { userId, user } = args;
+
+    const userForUpdate = db.users.find(u => u.id === userId);
+    if (!userForUpdate) {
+      throw new Error("User not found");
+    }
+
+    if (user.email !== undefined) {
+      const emailTaken = db.users.some(u => u.email === user.email);
+      if (emailTaken) {
+        throw new Error("This email has been taken");
+      }
+
+      userForUpdate.email = user.email;
+    }
+
+    if (user.name !== undefined && typeof user.name === "string") {
+      userForUpdate.name = user.name;
+    }
+
+    if (user.age !== undefined) {
+      userForUpdate.age = user.age;
+    }
+
+    return userForUpdate;
+  },
+
   createPost(parent, args, { db }, info) {
     const {
       inputPost: { author, title, body, published }
@@ -85,6 +113,28 @@ export const Mutation = {
     // delete all the comments for the post
     db.comments = db.comments.filter(comment => comment.post !== postId);
     return deletedPosts[0];
+  },
+
+  updatePost(parent, args, { db }, info) {
+    const { postId, post } = args;
+
+    const postForUpdate = db.posts.find(p => p.id === postId);
+
+    if (!postForUpdate) {
+      throw new Error("Post not found");
+    }
+
+    if (post.title !== undefined && typeof post.title === "string") {
+      postForUpdate.title = post.title;
+    }
+    if (post.body !== undefined && typeof post.body === "string") {
+      postForUpdate.body = post.body;
+    }
+    if (post.published !== undefined && typeof post.published === "boolean") {
+      postForUpdate.published = post.published;
+    }
+
+    return postForUpdate;
   },
 
   createComment(parent, args, { db }, info) {
@@ -131,5 +181,21 @@ export const Mutation = {
     const deletedComment = db.comments.splice(commentIdx, 1)[0];
 
     return deletedComment;
+  },
+
+  updateComment(parent, args, { db }, info) {
+    const { commentId, comment } = args;
+
+    const commentForUpdate = db.comments.find(c => c.id === commentId);
+
+    if (!commentForUpdate) {
+      throw new Error("Comment not found");
+    }
+
+    if (comment.text !== undefined && typeof comment.text === "string") {
+      commentForUpdate.text = comment.text;
+    }
+
+    return commentForUpdate;
   }
 };
