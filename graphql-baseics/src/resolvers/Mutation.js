@@ -1,4 +1,5 @@
 import uuidv4 from "uuid/v4";
+import { CREATED, UPDATED, DELETED } from "./MutationTypes";
 
 export const Mutation = {
   createUser(parent, args, { db }, info) {
@@ -100,7 +101,7 @@ export const Mutation = {
     if (published) {
       pubsub.publish("post", {
         post: {
-          mutation: "CREATED",
+          mutation: CREATED,
           data: newPost
         }
       });
@@ -124,7 +125,7 @@ export const Mutation = {
     if (deletedPost.published) {
       pubsub.publish("post", {
         post: {
-          mutation: "DELETED",
+          mutation: DELETED,
           data: deletedPost
         }
       });
@@ -157,7 +158,7 @@ export const Mutation = {
         // delete
         pubsub.publish("post", {
           post: {
-            mutation: "DELETED",
+            mutation: DELETED,
             data: originalPost
           }
         });
@@ -165,7 +166,7 @@ export const Mutation = {
         // create
         pubsub.publish("post", {
           post: {
-            mutation: "CREATED",
+            mutation: CREATED,
             data: postForUpdate
           }
         });
@@ -174,7 +175,7 @@ export const Mutation = {
       // update
       pubsub.publish("post", {
         post: {
-          mutation: "UPDATED",
+          mutation: UPDATED,
           data: postForUpdate
         }
       });
@@ -211,7 +212,7 @@ export const Mutation = {
     db.comments.push(newComment);
     pubsub.publish(`comment ${post}`, {
       comment: {
-        mutation: "CREATED",
+        mutation: CREATED,
         data: newComment
       }
     });
@@ -233,7 +234,7 @@ export const Mutation = {
 
     pubsub.publish(`comment ${deletedComment.post}`, {
       comment: {
-        mutation: "DELETED",
+        mutation: DELETED,
         data: deletedComment
       }
     });
@@ -256,7 +257,7 @@ export const Mutation = {
 
     pubsub.publish(`comment ${commentForUpdate.post}`, {
       comment: {
-        mutation: "UPDATED",
+        mutation: UPDATED,
         data: commentForUpdate
       }
     });
