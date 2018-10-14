@@ -77,7 +77,7 @@ export const Mutation = {
     return userForUpdate;
   },
 
-  createPost(parent, args, { db }, info) {
+  createPost(parent, args, { db, pubsub }, info) {
     const {
       inputPost: { author, title, body, published }
     } = args;
@@ -96,6 +96,12 @@ export const Mutation = {
     };
 
     db.posts.unshift(newPost);
+
+    if (published) {
+      pubsub.publish("post", {
+        post: newPost
+      });
+    }
 
     return newPost;
   },
@@ -137,7 +143,7 @@ export const Mutation = {
     return postForUpdate;
   },
 
-  createComment(parent, args, { db }, info) {
+  createComment(parent, args, { db, pubsub }, info) {
     const {
       inputComment: { text, author, post }
     } = args;
@@ -163,7 +169,9 @@ export const Mutation = {
     };
 
     db.comments.push(newComment);
-
+    pubsub.publish(`comment ${post}`, {
+      comment: newComment
+    });
     return newComment;
   },
 

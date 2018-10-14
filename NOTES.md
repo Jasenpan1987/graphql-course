@@ -276,3 +276,77 @@ const Query = {
   ...
 }
 ```
+
+## 1.3 Subscription
+
+In graphql, you can create an subscription for the front end to listen to, and behind the scenes, it runs a websocket.
+
+To configure the subscription on our graphql server, we need to do the following:
+
+1. In the type defination, we add
+
+```
+type Subscription {
+  count: Int!
+}
+```
+
+2. In the server configuration file (`index.js` in this project),
+
+```js
+import { GraphQLServer, PubSub } from "graphql-yoga";
+import db from "./db";
+import {
+  Query,
+  Mutation,
+  User,
+  Post,
+  Comment,
+  Subscription
+} from "./resolvers";
+
+const pubsub = new PubSub();
+
+const server = new GraphQLServer({
+  typeDefs: "./src/schema.graphql",
+  resolvers: {
+    User,
+    Post,
+    Comment,
+    Query,
+    Mutation,
+    Subscription
+  },
+  context: { db, pubsub }
+});
+
+server.start(() => {
+  console.log("Starting server...");
+});
+```
+
+Here we added a couple of things, first, we creates an instance of `PubSub` which lives in the `graphql-yoga`. The PubSub works very similar to websocket. The subscription is the resolver we need to create next. And finally, we added the `PubSub` instance we created to the context, so that later on our resolvers can access it.
+
+3. Create a new resolver called `Subscription`
+
+```js
+export const Subscription = {
+  count: {
+    subscribe(parent, args, ctx, info) {
+      const { pubsub } = ctx;
+      let count = 0;
+
+      setInterval(() => {
+        count += 1;
+        pubsub.publish("count", {
+          count
+        });
+      }, 1000);
+
+      return pubsub.asyncIterator("count");
+    }
+  }
+};
+```
+
+When we call `pubsub.publish` we need to give the channel and the data. And also, at the end, we return the `asyncIterator` which is a kind of the pubsub, and then give the channel name of `"count"`.
