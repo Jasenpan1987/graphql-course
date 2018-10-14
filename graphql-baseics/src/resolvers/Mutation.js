@@ -31,7 +31,7 @@ export const Mutation = {
       throw new Error("User not found");
     }
 
-    const deletedUsers = db.users.splice(userIdx, 1);
+    const [deletedUser] = db.users.splice(userIdx, 1);
 
     // delete all the posts and comments for the deleted user
     db.posts = db.posts.filter(post => {
@@ -46,7 +46,7 @@ export const Mutation = {
 
     db.comments = db.comments.filter(comment => comment.author !== userId);
 
-    return deletedUsers[0];
+    return deletedUser;
   },
 
   updateUser(parent, args, { db }, info) {
@@ -99,14 +99,17 @@ export const Mutation = {
 
     if (published) {
       pubsub.publish("post", {
-        post: newPost
+        post: {
+          mutation: "CREATED",
+          data: newPost
+        }
       });
     }
 
     return newPost;
   },
 
-  deletePost(parent, args, { db }, info) {
+  deletePost(parent, args, { db, pubsub }, info) {
     const { postId } = args;
     const postIdx = db.posts.findIndex(post => post.id === postId);
 
@@ -114,17 +117,26 @@ export const Mutation = {
       throw new Error("Post not found");
     }
 
-    const deletedPosts = db.posts.splice(postIdx, 1);
-
+    const [deletedPost] = db.posts.splice(postIdx, 1);
     // delete all the comments for the post
     db.comments = db.comments.filter(comment => comment.post !== postId);
-    return deletedPosts[0];
+
+    if (deletedPost.published) {
+      pubsub.publish("post", {
+        post: {
+          mutation: "DELETED",
+          data: deletedPost
+        }
+      });
+    }
+    return deletedPost;
   },
 
-  updatePost(parent, args, { db }, info) {
+  updatePost(parent, args, { db, pubsub }, info) {
     const { postId, post } = args;
 
     const postForUpdate = db.posts.find(p => p.id === postId);
+    const originalPost = { ...postForUpdate };
 
     if (!postForUpdate) {
       throw new Error("Post not found");
@@ -133,11 +145,39 @@ export const Mutation = {
     if (post.title !== undefined && typeof post.title === "string") {
       postForUpdate.title = post.title;
     }
+
     if (post.body !== undefined && typeof post.body === "string") {
       postForUpdate.body = post.body;
     }
+
     if (post.published !== undefined && typeof post.published === "boolean") {
       postForUpdate.published = post.published;
+
+      if (originalPost.published && !post.published) {
+        // delete
+        pubsub.publish("post", {
+          post: {
+            mutation: "DELETED",
+            data: originalPost
+          }
+        });
+      } else if (!originalPost.published && post.published) {
+        // create
+        pubsub.publish("post", {
+          post: {
+            mutation: "CREATED",
+            data: postForUpdate
+          }
+        });
+      }
+    } else if (postForUpdate.published) {
+      // update
+      pubsub.publish("post", {
+        post: {
+          mutation: "UPDATED",
+          data: postForUpdate
+        }
+      });
     }
 
     return postForUpdate;
@@ -170,12 +210,15 @@ export const Mutation = {
 
     db.comments.push(newComment);
     pubsub.publish(`comment ${post}`, {
-      comment: newComment
+      comment: {
+        mutation: "CREATED",
+        data: newComment
+      }
     });
     return newComment;
   },
 
-  deleteComment(parent, args, { db }, info) {
+  deleteComment(parent, args, { db, pubsub }, info) {
     const { commentId } = args;
 
     const commentIdx = db.comments.findIndex(
@@ -186,12 +229,19 @@ export const Mutation = {
       throw new Error("Comment not exist");
     }
 
-    const deletedComment = db.comments.splice(commentIdx, 1)[0];
+    const [deletedComment] = db.comments.splice(commentIdx, 1);
+
+    pubsub.publish(`comment ${deletedComment.post}`, {
+      comment: {
+        mutation: "DELETED",
+        data: deletedComment
+      }
+    });
 
     return deletedComment;
   },
 
-  updateComment(parent, args, { db }, info) {
+  updateComment(parent, args, { db, pubsub }, info) {
     const { commentId, comment } = args;
 
     const commentForUpdate = db.comments.find(c => c.id === commentId);
@@ -204,6 +254,12 @@ export const Mutation = {
       commentForUpdate.text = comment.text;
     }
 
+    pubsub.publish(`comment ${commentForUpdate.post}`, {
+      comment: {
+        mutation: "UPDATED",
+        data: commentForUpdate
+      }
+    });
     return commentForUpdate;
   }
 };
